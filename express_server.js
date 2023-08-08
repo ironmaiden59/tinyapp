@@ -23,7 +23,9 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: /* What goes here? */ };
+  const id = req.params.id;
+  const longURL = urlDatabase[id]; // Replace urlDatabase with your actual data source
+  const templateVars = { id, longURL };
   res.render("urls_show", templateVars);
 });
 
