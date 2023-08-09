@@ -13,6 +13,18 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+
+  // Use JavaScript's delete operator to remove the URL
+  if (urlDatabase[id]) {
+    delete urlDatabase[id];
+    res.redirect("/urls"); // Redirect back to the URLs index page
+  } else {
+    res.status(404).send("Short URL not found");
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
