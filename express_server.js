@@ -61,11 +61,12 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
+  const id = req.params.id;
+  const newLongURL = req.body.newLongURL;
 
-  if (longURL) {
-    res.redirect(longURL);
+  if (urlDatabase[id]) {
+    urlDatabase[id] = newLongURL;
+    res.redirect("/urls"); // Redirect back to the URLs index page
   } else {
     res.status(404).send("Short URL not found");
   }
