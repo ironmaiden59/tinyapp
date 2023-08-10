@@ -35,10 +35,17 @@
           <div class="navbar-nav">
             <a class="nav-item nav-link" href="/urls">My URLs</a>
             <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+            
           </div>
         </div>
-      </nav>
-    </header>
+        <form action="/login" method="POST">
+          <div class="form-group">
+            
+            <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username"/>
+          </div>
+          <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+      </header>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
       <table class="table">
