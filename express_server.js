@@ -95,6 +95,16 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// Helper function to find a user by email
+const getUserByEmail = (email) => {
+  for (const userId in users) {
+    if (users.hasOwnProperty(userId) && users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return null;
+};
+
 //register form
 app.get("/register", (req, res) => {
   let templateVars = {username: "user"};
@@ -104,26 +114,29 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const userId = generateRandomString(); // Generate a random user ID
-  
+
+  // Check for empty strings in email and password
+  if (!email || !password) {
+    res.status(400).send("E-mail and password cannot be empty.");
+    return;
+  }
+
+  // Check if the email is already in the users object
+  if (getUserByEmail(email)) {
+    res.status(400).send("E-mail already exists.");
+    return;
+  }
+
+  const userId = generateRandomString();
+
   const newUser = {
     id: userId,
     email: email,
-    password: password
+    password: password,
   };
-  
-  users[userId] = newUser; // Add the new user to the global users object
-  console.log(users);
-  // Set a user_id cookie with the newly generated ID
-  res.cookie("user_id", userId);
-  
-  // Redirect the user to the /urls page
-  res.redirect("/urls");
-  
-});
 
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id")
+  users[userId] = newUser;
+  res.cookie("user_id", userId);
   res.redirect("/urls");
 });
 
