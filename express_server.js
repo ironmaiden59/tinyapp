@@ -47,7 +47,14 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies['user_id']] }; 
+  // Check if the user is logged in
+  const user = users[req.cookies['user_id']];
+  if (!user) {
+    res.redirect("/login");
+    return;
+  }
+
+  const templateVars = { user: user };
   res.render("urls_new", templateVars);
 });
 
@@ -59,6 +66,13 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  // Check if the user is logged in
+  const user = users[req.cookies['user_id']];
+  if (!user) {
+    res.status(403).send("You must be logged in to create short URLs.");
+    return;
+  }
+
   console.log(req.body);
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
@@ -70,6 +84,13 @@ app.post("/urls", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
+
+  if (!longURL) {
+    // Short URL id does not exist in the database
+    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
+    return;
+  }
+
   res.redirect(longURL);
 });
 
@@ -90,6 +111,12 @@ app.post("/urls/:id", (req, res) => {
 
 //login form
 app.get("/login", (req, res) => {
+  // Check if the user is already logged in
+  if (users[req.cookies['user_id']]) {
+    res.redirect("/urls");
+    return;
+  }
+
   const templateVars = {
     user: users[req.cookies['user_id']]
   };
@@ -133,6 +160,12 @@ const getUserByEmail = (email) => {
 
 //register form
 app.get("/register", (req, res) => {
+  // Check if the user is already logged in
+  if (users[req.cookies['user_id']]) {
+    res.redirect("/urls");
+    return;
+  }
+
   let templateVars = { user: null };
   res.render("urls_registration", templateVars);
 });
