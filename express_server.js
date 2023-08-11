@@ -42,12 +42,13 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: users[req.cookies['user_id']] };
+  const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']] };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { user: users[req.cookies['user_id']] }; 
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -95,9 +96,28 @@ app.get("/login", (req, res) => {
   res.render("urls_login", templateVars);
 });
 
+// Update the POST /login endpoint
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie("username", username);
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // Find the user by email
+  const user = getUserByEmail(email);
+
+  if (!user) {
+    // User with the provided email doesn't exist
+    res.status(403).send("User not found.");
+    return;
+  }
+
+  if (user.password !== password) {
+    // Password doesn't match
+    res.status(403).send("Incorrect password.");
+    return;
+  }
+
+  // Both email and password are correct, set the user_id cookie
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
 
@@ -113,7 +133,7 @@ const getUserByEmail = (email) => {
 
 //register form
 app.get("/register", (req, res) => {
-  let templateVars = {username: "user"};
+  let templateVars = { user: null };
   res.render("urls_registration", templateVars);
 });
 
@@ -148,7 +168,7 @@ app.post("/register", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.cookie("user_id", null);
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 
