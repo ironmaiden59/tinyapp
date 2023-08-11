@@ -87,7 +87,13 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-
+//login form
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: users[req.cookies['user_id']]
+  };
+  res.render("urls_login", templateVars);
+});
 
 app.post("/login", (req, res) => {
   const username = req.body.username;
@@ -140,7 +146,10 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-
+app.post("/logout", (req, res) => {
+  res.cookie("user_id", null);
+  res.redirect("/urls");
+});
 
 
 

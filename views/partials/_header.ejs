@@ -19,15 +19,22 @@
       </div>
     </div>
     <% if(username){ %>
-      <p> Loggin In As : <%= username.email %></p>
-      <form action="/logout"   method="POST" >
-       <button  type="submit"> Logout </button> 
-     </form>
-        <% } else{ %>
-          <div class="navbar-nav"></div>
-          <a class="nav-item nav-link" href="/login">  Login  </a>
-          <a class="nav-item nav-link" href="/register"> Register </a>
-        </div>
-        <% } %>
+      <p> Logged In As: <%= username.email %></p>
+      <form action="/logout" method="POST">
+        <button type="submit" class="btn btn-link">Logout</button>
+      </form>
+    <% } else { %>
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" href="/login">Login</a>
+        <a class="nav-item nav-link" href="/register">Register</a>
+      </div>
+    <% } %>
   </nav>
 </header>
+
+
+
+
+
+
+
