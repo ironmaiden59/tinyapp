@@ -18,21 +18,16 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (username) { %>
-      <div>
-        <p> <%= username %>!</p>
-        <form action="/logout" method="POST">
-          <button type="submit">Logout</button>
-        </form>
-      </div>
-    <% } else { %>
-      <div>
-        <form action="/login" method="POST">
-          <label for="username">Username: </label>
-          <input type="text" name="username">
-          <button type="submit">Login</button>
-        </form>
-      </div>
-    <% } %>
+    <% if(username){ %>
+      <p> Loggin In As : <%= username.email %></p>
+      <form action="/logout"   method="POST" >
+       <button  type="submit"> Logout </button> 
+     </form>
+        <% } else{ %>
+          <div class="navbar-nav"></div>
+          <a class="nav-item nav-link" href="/login">  Login  </a>
+          <a class="nav-item nav-link" href="/register"> Register </a>
+        </div>
+        <% } %>
   </nav>
 </header>
