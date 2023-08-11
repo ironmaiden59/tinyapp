@@ -143,12 +143,20 @@ app.post("/urls/:id/delete", (req, res) => {
   const url = urlDatabase[id];
 
   if (!url) {
-    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
+    const errorMessage = "Short URL not found.";
+    res.status(404).send(errorMessage);
+    return;
+  }
+
+  if (!user) {
+    const errorMessage = "You must be logged in to delete this URL.";
+    res.status(403).send(errorMessage);
     return;
   }
 
   if (url.userID !== user.id) {
-    res.status(403).send("You don't have permission to delete this URL.");
+    const errorMessage = "You don't have permission to delete this URL.";
+    res.status(403).send(errorMessage);
     return;
   }
 
@@ -162,15 +170,22 @@ app.post("/urls/:id", (req, res) => {
   const url = urlDatabase[id];
 
   if (!url) {
-    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
+    const errorMessage = "Short URL not found.";
+    res.status(404).send(errorMessage);
+    return;
+  }
+
+  if (!user) {
+    const errorMessage = "You must be logged in to edit this URL.";
+    res.status(403).send(errorMessage);
     return;
   }
 
   if (url.userID !== user.id) {
-    res.status(403).send("You don't have permission to update this URL.");
+    const errorMessage = "You don't have permission to edit this URL.";
+    res.status(403).send(errorMessage);
     return;
   }
-
   const longURL = req.body.longURL;
   urlDatabase[id].longURL = longURL;
   res.redirect("/urls");
