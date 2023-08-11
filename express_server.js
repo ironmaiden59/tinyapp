@@ -42,7 +42,24 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']] };
+  const user = users[req.cookies['user_id']];
+  const userURLs = {};
+
+  // Check if the user is logged in
+  if (!user) {
+    // Redirect to login page or handle as needed
+    res.redirect("/login");
+    return;
+  }
+
+  // Filter URLs that belong to the current user
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === user.id) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+
+  const templateVars = { urls: userURLs, user: user };
   res.render("urls_index", templateVars);
 });
 
@@ -59,11 +76,24 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  const user = users[req.cookies['user_id']];
   const id = req.params.id;
-  const longURL = urlDatabase[id];
-  const templateVars = { id: id, longURL: longURL };
+  const url = urlDatabase[id];
+
+  if (!url) {
+    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
+    return;
+  }
+
+  // Check if the URL belongs to the current user
+  if (url.userID !== user.id) {
+    res.status(403).send("You don't have permission to access this URL.");
+    return;
+  }
+
+  const templateVars = { id: id, longURL: url.longURL };
   res.render("urls_show", templateVars);
-});
+})
 
 app.post("/urls", (req, res) => {
   // Check if the user is logged in
@@ -73,11 +103,9 @@ app.post("/urls", (req, res) => {
     return;
   }
 
-  console.log(req.body);
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  console.log(urlDatabase);
+  urlDatabase[shortURL] = { longURL: longURL, userID: user.id };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -95,17 +123,41 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  const user = users[req.cookies['user_id']];
   const id = req.params.id;
+  const url = urlDatabase[id];
+
+  if (!url) {
+    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
+    return;
+  }
+
+  if (url.userID !== user.id) {
+    res.status(403).send("You don't have permission to delete this URL.");
+    return;
+  }
+
   delete urlDatabase[id];
   res.redirect("/urls");
 });
 
 app.post("/urls/:id", (req, res) => {
-  console.log(req.body);
+  const user = users[req.cookies['user_id']];
   const id = req.params.id;
+  const url = urlDatabase[id];
+
+  if (!url) {
+    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
+    return;
+  }
+
+  if (url.userID !== user.id) {
+    res.status(403).send("You don't have permission to update this URL.");
+    return;
+  }
+
   const longURL = req.body.longURL;
-  urlDatabase[id] = longURL;
-  console.log(urlDatabase);
+  urlDatabase[id].longURL = longURL;
   res.redirect("/urls");
 });
 
