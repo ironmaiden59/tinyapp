@@ -41,23 +41,29 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+const urlsForUser = (id) => {
+  const userURLs = {};
+
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+
+  return userURLs;
+};
+
 app.get("/urls", (req, res) => {
   const user = users[req.cookies['user_id']];
 
   if (!user) {
-    const templateVars = { user: null, errorMessage: "You must be logged in to view your URLs. Please log in or register." };
-    res.render("urls_error", templateVars); // Render a custom error page with the message
+    const errorMessage = "You must be logged in to view your URLs. Please log in or register.";
+    const errorHTML = `<html><body><h1>Error</h1><p>${errorMessage}</p></body></html>`;
+    res.status(403).send(errorHTML); // Send the error message as HTML
     return;
   }
 
-  const userURLs = {};
-
-  // Filter URLs that belong to the current user
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === user.id) {
-      userURLs[shortURL] = urlDatabase[shortURL];
-    }
-  }
+  const userURLs = urlsForUser(user.id);
 
   const templateVars = { urls: userURLs, user: user };
   res.render("urls_index", templateVars);
@@ -80,6 +86,13 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const url = urlDatabase[id];
 
+  if (!user) {
+    const errorMessage = "You must be logged in to view this URL. Please log in or register.";
+    const errorHTML = `<html><body><h1>Error</h1><p>${errorMessage}</p></body></html>`;
+    res.status(403).send(errorHTML); // Send the error message as HTML
+    return;
+  }
+
   if (!url) {
     res.status(404).send("<html><body>Short URL not found.</body></html>\n");
     return;
@@ -87,13 +100,15 @@ app.get("/urls/:id", (req, res) => {
 
   // Check if the URL belongs to the current user
   if (url.userID !== user.id) {
-    res.status(403).send("You don't have permission to access this URL.");
+    const errorMessage = "You don't have permission to access this URL.";
+    const errorHTML = `<html><body><h1>Error</h1><p>${errorMessage}</p></body></html>`;
+    res.status(403).send(errorHTML); // Send the error message as HTML
     return;
   }
 
   const templateVars = { id: id, longURL: url.longURL };
   res.render("urls_show", templateVars);
-})
+});
 
 app.post("/urls", (req, res) => {
   // Check if the user is logged in
