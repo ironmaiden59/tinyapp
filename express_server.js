@@ -43,14 +43,14 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = users[req.cookies['user_id']];
-  const userURLs = {};
 
-  // Check if the user is logged in
   if (!user) {
-    // Redirect to login page or handle as needed
-    res.redirect("/login");
+    const templateVars = { user: null, errorMessage: "You must be logged in to view your URLs. Please log in or register." };
+    res.render("urls_error", templateVars); // Render a custom error page with the message
     return;
   }
+
+  const userURLs = {};
 
   // Filter URLs that belong to the current user
   for (const shortURL in urlDatabase) {
