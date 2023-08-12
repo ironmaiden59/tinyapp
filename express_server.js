@@ -4,6 +4,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
+const { getUserByEmail } = require("./helpers");
 
 const generateRandomString = function() {
   let result = "";
@@ -216,7 +217,7 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   // Find the user by email
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
 
   if (!user) {
     res.status(403).send("User not found.");
@@ -234,15 +235,6 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-// Helper function to find a user by email
-const getUserByEmail = (email) => {
-  for (const userId in users) {
-    if (users.hasOwnProperty(userId) && users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return null;
-};
 
 //register form
 app.get("/register", (req, res) => {
@@ -267,7 +259,7 @@ app.post("/register", (req, res) => {
   }
 
   // Check if the email is already in the users object
-  if (getUserByEmail(email)) {
+  if (getUserByEmail(email, users)) {
     res.status(400).send("E-mail already exists.");
     return;
   }
