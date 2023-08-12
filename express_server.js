@@ -2,7 +2,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
 const generateRandomString = function() {
@@ -22,7 +22,11 @@ const urlDatabase = {
 };
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());  
+app.use(cookieSession({
+  name: "session",
+  keys: ["secret-key"], 
+  maxAge: 24 * 60 * 60 * 1000, 
+})); 
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -55,7 +59,7 @@ const urlsForUser = (id) => {
 };
 
 app.get("/urls", (req, res) => {
-  const user = users[req.cookies['user_id']];
+  const user = users[req.session.user_id];
 
   if (!user) {
     const errorMessage = "You must be logged in to view your URLs. Please log in or register.";
@@ -72,7 +76,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // Check if the user is logged in
-  const user = users[req.cookies['user_id']];
+  const user = users[req.session.user_id];
   if (!user) {
     res.redirect("/login");
     return;
@@ -195,13 +199,13 @@ app.post("/urls/:id", (req, res) => {
 //login form
 app.get("/login", (req, res) => {
   // Check if the user is already logged in
-  if (users[req.cookies['user_id']]) {
+  if (users[req.session.user_id]) {
     res.redirect("/urls");
     return;
   }
 
   const templateVars = {
-    user: users[req.cookies['user_id']]
+    user: users[req.session.user_id]
   };
   res.render("urls_login", templateVars);
 });
@@ -226,7 +230,7 @@ app.post("/login", (req, res) => {
   }
 
   // Both email and password are correct, set the user_id cookie
-  res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
@@ -243,7 +247,7 @@ const getUserByEmail = (email) => {
 //register form
 app.get("/register", (req, res) => {
   // Check if the user is already logged in
-  if (users[req.cookies['user_id']]) {
+  if (users[req.session.user_id]) {
     res.redirect("/urls");
     return;
   }
@@ -280,12 +284,12 @@ app.post("/register", (req, res) => {
   };
 
   users[userId] = newUser;
-  res.cookie("user_id", userId);
+  req.session.user_id = userId;
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.cookie("user_id", null);
+  req.session.user_id = null;
   res.redirect("/login");
 });
 
