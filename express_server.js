@@ -71,7 +71,11 @@ app.get("/urls", (req, res) => {
 
   const userURLs = urlsForUser(user.id);
 
-  const templateVars = { urls: userURLs, user: user };
+  const templateVars = {
+    urls: userURLs,
+    user: user,
+    urlDatabase: urlDatabase // Pass the urlDatabase to the template
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -88,7 +92,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies['user_id']];
+  const user = users[req.session.user_id];
   const id = req.params.id;
   const url = urlDatabase[id];
 
@@ -112,13 +116,14 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
 
-  const templateVars = { id: id, longURL: url.longURL };
+  const templateVars = { id: id, longURL: urlDatabase[id].longURL };
+  console.log(urlDatabase[id].longURL);
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   // Check if the user is logged in
-  const user = users[req.cookies['user_id']];
+  const user = users[req.session.user_id];
   if (!user) {
     res.status(403).send("You must be logged in to create short URLs.");
     return;
