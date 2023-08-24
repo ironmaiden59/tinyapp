@@ -121,7 +121,7 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
 
-  const templateVars = { id: id, longURL: urlDatabase[id].longURL };
+  const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: user };
   console.log(urlDatabase[id].longURL);
   res.render("urls_show", templateVars);
 });
@@ -151,7 +151,7 @@ app.get("/urls/:id/edit", (req, res) => {
     return;
   }
 
-  const templateVars = { id: id, longURL: urlDatabase[id].longURL };
+  const templateVars = { id: id, longURL: urlDatabase[id].longURL, user: user };
   res.render("urls_show", templateVars); // Use the same template as the one for viewing URLs
 });
 
