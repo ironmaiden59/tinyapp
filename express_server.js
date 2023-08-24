@@ -18,25 +18,28 @@ const generateRandomString = function() {
 
 app.set("view engine", "ejs");
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: null },
+  "9sm5xK": { longURL: "http://www.google.com", userID: null }
 };
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); 
 app.use(cookieSession({
   name: "session",
   keys: ["secret-key"], 
-  maxAge: 24 * 60 * 60 * 1000, 
+  maxAge: 0, 
 })); 
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+
 
 const users = {};
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = users[req.session.user_id];
+  if (user) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -91,6 +94,8 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+
+
 app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   const id = req.params.id;
@@ -121,6 +126,63 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/urls/:id/edit", (req, res) => {
+  const user = users[req.session.user_id];
+  const id = req.params.id;
+  const url = urlDatabase[id];
+
+  if (!user) {
+    const errorMessage = "You must be logged in to edit this URL. Please log in or register.";
+    const errorHTML = `<html><body><h1>Error</h1><p>${errorMessage}</p></body></html>`;
+    res.status(403).send(errorHTML); // Send the error message as HTML
+    return;
+  }
+
+  if (!url) {
+    const errorMessage = "Short URL not found.";
+    res.status(404).send(errorMessage);
+    return;
+  }
+
+  if (url.userID !== user.id) {
+    const errorMessage = "You don't have permission to edit this URL.";
+    const errorHTML = `<html><body><h1>Error</h1><p>${errorMessage}</p></body></html>`;
+    res.status(403).send(errorHTML); // Send the error message as HTML
+    return;
+  }
+
+  const templateVars = { id: id, longURL: urlDatabase[id].longURL };
+  res.render("urls_show", templateVars); // Use the same template as the one for viewing URLs
+});
+
+app.post("/urls/:id", (req, res) => {
+  const user = users[req.session.user_id];
+  const id = req.params.id;
+  const url = urlDatabase[id];
+
+  if (!url) {
+    const errorMessage = "Short URL not found.";
+    res.status(404).send(errorMessage);
+    return;
+  }
+
+  if (!user) {
+    const errorMessage = "You must be logged in to edit this URL.";
+    res.status(403).send(errorMessage);
+    return;
+  }
+
+  if (url.userID !== user.id) {
+    const errorMessage = "You don't have permission to edit this URL.";
+    res.status(403).send(errorMessage);
+    return;
+  }
+
+  const newLongURL = req.body.newLongURL;
+  urlDatabase[id].longURL = newLongURL;
+  res.redirect("/urls"); // Redirect back to the /urls page after updating the URL
+});
+
 app.post("/urls", (req, res) => {
   // Check if the user is logged in
   const user = users[req.session.user_id];
@@ -137,19 +199,19 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
-
-  if (!longURL) {
-    // Short URL id does not exist in the database
-    res.status(404).send("<html><body>Short URL not found.</body></html>\n");
-    return;
+  const urlObject = urlDatabase[shortURL];
+  
+  if (urlObject) {
+    const longURL = urlObject.longURL;
+    res.redirect(longURL);
+  } else {
+    const errorMessage = "Short URL not found.";
+    res.status(404).send(`<html><body>${errorMessage}</body></html>\n`);
   }
-
-  res.redirect(longURL);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const user = users[req.cookies['user_id']];
+  const user = users[req.session.user_id];
   const id = req.params.id;
   const url = urlDatabase[id];
 
@@ -175,32 +237,7 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/urls/:id", (req, res) => {
-  const user = users[req.cookies['user_id']];
-  const id = req.params.id;
-  const url = urlDatabase[id];
 
-  if (!url) {
-    const errorMessage = "Short URL not found.";
-    res.status(404).send(errorMessage);
-    return;
-  }
-
-  if (!user) {
-    const errorMessage = "You must be logged in to edit this URL.";
-    res.status(403).send(errorMessage);
-    return;
-  }
-
-  if (url.userID !== user.id) {
-    const errorMessage = "You don't have permission to edit this URL.";
-    res.status(403).send(errorMessage);
-    return;
-  }
-  const longURL = req.body.longURL;
-  urlDatabase[id].longURL = longURL;
-  res.redirect("/urls");
-});
 
 //login form
 app.get("/login", (req, res) => {
@@ -286,9 +323,12 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  req.session.user_id = null;
+  req.session = null;
   res.redirect("/login");
 });
 
+app.listen(PORT, () => {
+  
+});
 
 
